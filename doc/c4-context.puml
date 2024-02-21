@@ -2,7 +2,7 @@
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
 Person(client, "Клиент", "Пользователь трекера задач")
-System(system, "Трекер задач")
+System(system, "Трекер задач", "Предоставляет возможность регистирироваться, работать с задачами, оставлять комментарии к задачам, ставить лайки на задачи и смотреть статистику по просмотрам и лайкам.")
 
-Rel(client, system, "Отслеживает задачи")
+Rel(client, system, "Использует")
 @enduml

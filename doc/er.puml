@@ -13,7 +13,7 @@ entity "Task" as task {
   --
   *user_id : uuid <<FK>>
   *content: text
-  *status : text 
+  *status : text
 }
 
 entity "Comment" as comment {
@@ -39,13 +39,13 @@ entity "View" as view {
   *user_id : uuid <<FK>>
 }
 
-task }o--|| user
-like }o--|| task
-like }o--|| user
-comment }o--|| task
-comment }o--|| user
-view }o--|| task
-view }o--|| user
-comment ||--|| comment
+task }o--|| user : creates
+like }o--|| task : has
+like }o--|| user : makes
+comment }o--|| task : has
+comment }o--|| user : makes
+view }o--|| task : has
+view }o--|| user : makes
+comment ||--|| comment : replies to
 
 @enduml
