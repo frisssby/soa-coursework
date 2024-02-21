@@ -1,0 +1,51 @@
+@startuml
+
+entity "User" as user {
+  *user_id : uuid <<PK>>
+  --
+  * username : text
+  * email : text
+  * password : text
+}
+
+entity "Task" as task {
+  *task_id : uuid <<PK>>
+  --
+  *user_id : uuid <<FK>>
+  *content: text
+  *status : text 
+}
+
+entity "Comment" as comment {
+  *comment_id : uuid <<PK>>
+  --
+  *task_id : uuid <<FK>>
+  *user_id : uuid <<FK>>
+  *content : text
+  parent_comment_id : uuid <<FK>> 
+}
+
+entity "Like" as like {
+  *like_id : uuid <<PK>>
+  --
+  *task_id : uuid <<FK>>
+  *user_id : uuid <<FK>>
+}
+
+entity "View" as view {
+  *view_id : uuid <<PK>>
+  --
+  *task_id : uuid <<FK>>
+  *user_id : uuid <<FK>>
+}
+
+task }o--|| user
+like }o--|| task
+like }o--|| user
+comment }o--|| task
+comment }o--|| user
+view }o--|| task
+view }o--|| user
+comment ||--|| comment
+
+@enduml
