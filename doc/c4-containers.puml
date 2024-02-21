@@ -26,12 +26,12 @@ Rel(client, ui, "Тыкает на кнопки")
 Rel(ui, main_service, "Вызов методов", "REST API")
 
 Rel(main_service, statistics_service, "Запрашивает статистику", "gRPC")
-Rel(main_service, users_db, "Пишет/читает")
+Rel(main_service, users_db, "Пишет/читает", "SQL")
 Rel(main_service, tasks_service, "Делает запросы", "gRPC")
 Rel(main_service, kafka, "Пишет в топики")
-Rel(tasks_service, tasks_db, "Пишет/читает")
+Rel(tasks_service, tasks_db, "Пишет/читает", "SQL")
 Rel(kafka, statistics_db, "Читает топики")
-Rel(statistics_service, statistics_db, "Читает данные")
+Rel(statistics_service, statistics_db, "Читает данные", "SQL")
 
 
 
