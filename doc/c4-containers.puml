@@ -8,7 +8,7 @@
 !include <cloudinsight/kafka>
 
 
-title Архитетура трекера задач
+title Архитектура трекера задач
 
 Person(client, "Клиент", "Пользователь трекера задач")
 Container(ui, "Frontend", "UI, через который пользователь общается с системой", "")
