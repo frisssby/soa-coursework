@@ -1,0 +1,100 @@
+openapi: 3.0.0
+info:
+  title: Task Tracker API
+  description: Task Tracker service public API
+  version: 0.1.0
+paths:
+  /auth/signup:
+    post:
+      summary: Create a new user
+      requestBody:
+        description: New user's credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreds'
+      responses:
+        '201':
+          description: Successfully created
+        '403':
+          description: User with speciefied username already exists
+  /auth/signin:
+    post:
+      requestBody:
+        description: User's credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreds'
+      responses:
+        '200':
+          description: Successfully authentificated. The access token is returned in a cookie named JWT. You need to include this cookie in subsequent requests.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: JWT=abcde123456
+        '403':
+          description: Invalid username or password
+  /user/{username}:
+    put:
+      summary: Update user data
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UserData'
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Successfully updated user data
+        '404':
+          description: User with provided username is not found
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+components:
+  schemas:
+    UserCreds:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: []
+      example:
+        username: taskkiller
+        password: qwerty1234
+    UserData:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateBirth:
+          type: string
+          format: date-time
+        phone:
+          type: string
+          format: phone
+        email:
+          type: string
+          format: email
+      example:
+        firstName: Ivan
+        lastName: Ivanov
+        dateBirth: 2020-05-11T20:14:14.796Z
+        phone: "+791611122233"
+        email: iivanov@gmail.com
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: JWT

@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  users-db:
+    image: mongo
+    ports:
+      - 27017:27017
+    restart: always
+
+  users-service:
+    image: main
+    command: ["--private", "/tmp/signature.pem", "--public", "/tmp/signature.pub", "--port", "8090"]
+    ports:
+      - 8090:8090
+    depends_on:
+      - users-db
+
+volumes:
+  users-data:
