@@ -34,7 +34,8 @@ func UpdateUserData(username string, userData models.UserData) error {
 		{Key: "$set", Value: bson.D{{Key: "data", Value: userData}}},
 		{Key: "$setOnInsert", Value: filter},
 	}
-	_, err := userDataCollection.UpdateOne(context.TODO(), filter, update)
+	opts := options.Update().SetUpsert(true)
+	_, err := userDataCollection.UpdateOne(context.TODO(), filter, update, opts)
 	return err
 }
 

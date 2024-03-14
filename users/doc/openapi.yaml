@@ -16,7 +16,12 @@ paths:
               $ref: '#/components/schemas/UserCreds'
       responses:
         '201':
-          description: Successfully created
+          description: Successfully signed up a new user. The access token is returned in a cookie named jwt. You need to include this cookie in subsequent requests.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: jwt=abcde123456
         '403':
           description: User with speciefied username already exists
   /auth/signin:
@@ -30,23 +35,28 @@ paths:
               $ref: '#/components/schemas/UserCreds'
       responses:
         '200':
-          description: Successfully authentificated. The access token is returned in a cookie named JWT. You need to include this cookie in subsequent requests.
+          description: Successfully authentificated. The access token is returned in a cookie named jwt. You need to include this cookie in subsequent requests.
           headers:
             Set-Cookie:
               schema:
                 type: string
-                example: JWT=abcde123456
+                example: jwt=abcde123456
         '403':
           description: Invalid username or password
   /user/{username}:
     put:
       summary: Update user data
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserData"
       parameters:
         - name: username
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/UserData'
+            type: string
       security:
         - cookieAuth: []
       responses:
@@ -62,23 +72,24 @@ components:
   schemas:
     UserCreds:
       type: object
+      required: [username, password]
       properties:
         username:
           type: string
         password:
           type: string
-      required: []
       example:
         username: taskkiller
         password: qwerty1234
     UserData:
       type: object
+      required: [first_name, last_name, date_birth, phone, email]
       properties:
-        firstName:
+        first_name:
           type: string
-        lastName:
+        last_name:
           type: string
-        dateBirth:
+        date_birth:
           type: string
           format: date-time
         phone:
@@ -97,4 +108,4 @@ components:
     cookieAuth:
       type: apiKey
       in: cookie
-      name: JWT
+      name: jwt
