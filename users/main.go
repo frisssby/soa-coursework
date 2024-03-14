@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
-	"main/db"
-	"main/jwt"
 	"os"
+	"users/db"
+	"users/jwt"
 )
 
 func main() {
 	if err := db.ConnectToMongoDB(os.Getenv("MONGODB_URI")); err != nil {
-		log.Fatal("Could not connect to MongoDB")
+		log.Fatal("Could not connect to MongoDB", err.Error())
 	}
 
 	privateFile := flag.String("private", "", "path to JWT private key `file`")
@@ -28,5 +28,5 @@ func main() {
 	router.POST("auth/signup", signUp)
 	router.POST("auth/signin", signIn)
 	router.PUT("user/:username", updateUser)
-	router.Run(fmt.Sprintf(":%d", port))
+	router.Run(fmt.Sprintf(":%d", *port))
 }

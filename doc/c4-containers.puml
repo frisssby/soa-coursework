@@ -3,6 +3,7 @@
 !define ICONURL https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/v2.4.0
 !includeurl ICONURL/common.puml
 !includeurl ICONURL/devicons/go.puml
+!include ICONURL/devicons2/mongodb.puml
 !include ICONURL/devicons2/postgresql.puml
 !includeurl ICONURL/font-awesome-5/database.puml
 !include <cloudinsight/kafka>
@@ -12,13 +13,13 @@ title Архитектура трекера задач
 
 Person(client, "Клиент", "Пользователь трекера задач")
 Container(ui, "Frontend", "UI, через который пользователь общается с системой", "")
-Container(main_service, "Main", "go", "Предоставляет клиентское API, отвечает за регистрацию и аутентификацию пользователей", "go")
+Container(main_service, "Users", "go", "Предоставляет клиентское API, отвечает за регистрацию и аутентификацию пользователей", "go")
 Container(statistics_service, "Statistics", "go", "Отвечает за подсчет лайков и просмотров", "go")
 Container(tasks_service, "Tasks", "go", "Отвечает за логику работы с задачами и комментариями", "go")
 
 ContainerQueue(kafka, "Likes & Views", "kafka", "", "kafka")
 ContainerDb(tasks_db, "Tasks DB", "postgresql", "Хранит информацию о задачах и комментариях", "postgresql")
-ContainerDb(users_db, "Users DB", "postgresql", "Хранит информацию о пользователях", "postgresql")
+ContainerDb(users_db, "Users DB", "mongodb", "Хранит информацию о пользователях", "mongodb")
 ContainerDb(statistics_db, "Statistics DB", "clickhouse", "Хранит информацию о просмотрах и лайках", "database")
 
 

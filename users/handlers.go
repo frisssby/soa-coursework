@@ -1,19 +1,25 @@
 package main
 
 import (
-	"main/db"
-	"main/jwt"
-	"main/models"
+	"users/db"
+	"users/jwt"
+	"users/models"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func hashPassword(password string) string {
-	// TODO
-	return password
+func hashPassword(password string) (string, error) {
+    bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+    return string(bytes), err
+}
+
+func checkPasswordHash(password, hash string) bool {
+    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+    return err == nil
 }
 
 func signUp(c *gin.Context) {
@@ -33,7 +39,13 @@ func signUp(c *gin.Context) {
 		return
 	}
 
-	userCreds.Password = hashPassword(userCreds.Password)
+	hashedPassword, err := hashPassword(userCreds.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, "")
+		return
+	}
+	userCreds.Password = hashedPassword
+
 	if err := db.CreateUser(userCreds); err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 	} else {
@@ -51,11 +63,13 @@ func signIn(c *gin.Context) {
 	if err == mongo.ErrNoDocuments {
 		c.JSON(http.StatusForbidden, "No user with provided username found")
 		return
-	} else if err != nil {
-		panic(err)
+	} 
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, "")
+		return;
 	}
 
-	if userCredsDB.Password != hashPassword(userCreds.Password) {
+	if !checkPasswordHash(userCreds.Password, userCredsDB.Password) {
 		c.JSON(http.StatusForbidden, "Wrong password")
 		return
 	}
@@ -64,6 +78,7 @@ func signIn(c *gin.Context) {
 	tokenString, err := jwt.GenerateJWT(userCreds.Username, expirationTime)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "Cannot generate token")
+		return
 	}
 	c.SetCookie("jwt", tokenString, expirationTime.Second(), "/", "localhost", false, true)
 }
@@ -72,6 +87,7 @@ func updateUser(c *gin.Context) {
 	tokenString, err := c.Cookie("jwt")
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, "No token provided")
+		return
 	}
 
 	username, err := jwt.ValidateJWT(tokenString)
@@ -82,6 +98,7 @@ func updateUser(c *gin.Context) {
 
 	if username != c.Param("username") {
 		c.JSON(http.StatusForbidden, "Not allowed to update this resource")
+		return
 	}
 
 	var userData models.UserData

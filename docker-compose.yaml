@@ -4,11 +4,19 @@ services:
   users-db:
     image: mongo
     ports:
-      - 27017:27017
+      - 27018:27017
     restart: always
+    volumes:
+      - users-data:/data/db
 
   users-service:
-    image: main
+    build:
+      context: users
+    environment:
+      MONGODB_URI: mongodb://users-db:27017
+    volumes:
+      - ${PRIVATE_KEY_FILE}:/tmp/signature.pem
+      - ${PUBLIC_KEY_FILE}:/tmp/signature.pub
     command: ["--private", "/tmp/signature.pem", "--public", "/tmp/signature.pub", "--port", "8090"]
     ports:
       - 8090:8090

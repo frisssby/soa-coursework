@@ -2,15 +2,11 @@ package jwt
 
 import (
 	"crypto/rsa"
+	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"os"
 	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
-
-const PublicPath = "./signature.pub"
-const PrivatePath = "./signature.pem"
 
 var jwtPublic *rsa.PublicKey
 var jwtPrivate *rsa.PrivateKey

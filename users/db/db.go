@@ -2,10 +2,10 @@ package db
 
 import (
 	"context"
-	"main/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"users/models"
 )
 
 var database *mongo.Database
@@ -17,18 +17,18 @@ func ConnectToMongoDB(uri string) error {
 		return err
 	}
 	err = client.Ping(context.TODO(), nil)
-	database = client.Database("test")
+	database = client.Database("users")
 	return err
 }
 
 func CreateUser(userCreds models.UserCredentials) error {
-	userCreadsCollection := database.Collection("user_creds")
+	userCreadsCollection := database.Collection("creds")
 	_, err := userCreadsCollection.InsertOne(context.TODO(), userCreds)
 	return err
 }
 
 func UpdateUserData(username string, userData models.UserData) error {
-	userDataCollection := database.Collection("user_data")
+	userDataCollection := database.Collection("data")
 	filter := bson.D{{Key: "username", Value: username}}
 	update := bson.D{
 		{Key: "$set", Value: bson.D{{Key: "data", Value: userData}}},
@@ -39,9 +39,10 @@ func UpdateUserData(username string, userData models.UserData) error {
 }
 
 func GetUserCredentials(username string) (models.UserCredentials, error) {
+	userCreadsCollection := database.Collection("creds")
 	filter := bson.D{{Key: "username", Value: username}}
 	var userCreds models.UserCredentials
-	err := database.Collection("user_creds").FindOne(context.TODO(), filter).Decode(&userCreds)
+	err := userCreadsCollection.FindOne(context.TODO(), filter).Decode(&userCreds)
 	if err != nil {
 		return models.UserCredentials{}, err
 	}
