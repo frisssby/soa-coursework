@@ -28,5 +28,8 @@ func main() {
 	router.POST("auth/signup", signUp)
 	router.POST("auth/signin", signIn)
 	router.PUT("user/:username", updateUser)
-	router.Run(fmt.Sprintf(":%d", *port))
+
+	if err := router.Run(fmt.Sprintf(":%d", *port)); err != nil {
+		log.Fatal("Failed to run http server: ", err.Error())
+	}
 }

@@ -1,25 +1,27 @@
 package main
 
 import (
-	"users/db"
-	"users/jwt"
-	"users/models"
-	"net/http"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/crypto/bcrypt"
+	"log"
+	"net/http"
+	"time"
+	"users/db"
+	"users/jwt"
+	"users/models"
 )
 
+const tokenTTl = 60 * time.Minute
+
 func hashPassword(password string) (string, error) {
-    bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-    return string(bytes), err
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	return string(bytes), err
 }
 
 func checkPasswordHash(password, hash string) bool {
-    err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-    return err == nil
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func signUp(c *gin.Context) {
@@ -35,22 +37,34 @@ func signUp(c *gin.Context) {
 		return
 	}
 	if err != mongo.ErrNoDocuments {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		log.Println("Error finding user creadential: ", err.Error())
+		c.JSON(http.StatusInternalServerError, "")
 		return
 	}
 
 	hashedPassword, err := hashPassword(userCreds.Password)
 	if err != nil {
+		log.Println("Failed to hash password: ", err.Error())
 		c.JSON(http.StatusInternalServerError, "")
 		return
 	}
 	userCreds.Password = hashedPassword
 
 	if err := db.CreateUser(userCreds); err != nil {
+		log.Println("Error creating user: ", err.Error())
 		c.JSON(http.StatusInternalServerError, err.Error())
-	} else {
-		c.JSON(http.StatusOK, "Successfully signed up")
+		return
 	}
+
+	expirationTime := time.Now().Add(tokenTTl)
+	tokenString, err := jwt.GenerateJWT(userCreds.Username, expirationTime)
+	if err != nil {
+		log.Println("Error generating token: ", err.Error())
+		c.JSON(http.StatusInternalServerError, "")
+		return
+	}
+	c.SetCookie("jwt", tokenString, expirationTime.Second(), "/", "localhost", false, true)
+	c.JSON(http.StatusOK, "Successfully signed up")
 }
 
 func signIn(c *gin.Context) {
@@ -63,10 +77,11 @@ func signIn(c *gin.Context) {
 	if err == mongo.ErrNoDocuments {
 		c.JSON(http.StatusForbidden, "No user with provided username found")
 		return
-	} 
+	}
 	if err != nil {
+		log.Println("Error finding user creadential: ", err.Error())
 		c.JSON(http.StatusInternalServerError, "")
-		return;
+		return
 	}
 
 	if !checkPasswordHash(userCreds.Password, userCredsDB.Password) {
@@ -74,13 +89,15 @@ func signIn(c *gin.Context) {
 		return
 	}
 
-	expirationTime := time.Now().Add(60 * time.Minute)
+	expirationTime := time.Now().Add(tokenTTl)
 	tokenString, err := jwt.GenerateJWT(userCreds.Username, expirationTime)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "Cannot generate token")
+		log.Println("Error generating token: ", err.Error())
+		c.JSON(http.StatusInternalServerError, "")
 		return
 	}
 	c.SetCookie("jwt", tokenString, expirationTime.Second(), "/", "localhost", false, true)
+	c.JSON(http.StatusOK, "Successfully signed in")
 }
 
 func updateUser(c *gin.Context) {
@@ -103,10 +120,13 @@ func updateUser(c *gin.Context) {
 
 	var userData models.UserData
 	if err := c.BindJSON(&userData); err != nil {
-		c.JSON(http.StatusBadRequest, "")
 		return
 	}
 
-	db.UpdateUserData(username, userData)
+	if err := db.UpdateUserData(username, userData); err != nil {
+		log.Println("Error updating user data: ", err.Error())
+		c.JSON(http.StatusInternalServerError, "")
+		return
+	}
 	c.JSON(http.StatusOK, "Successfully updated user data")
 }

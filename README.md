@@ -16,11 +16,12 @@ openssl rsa -in signature.pem -out signature.pub -pubout -outform PEM
 
 Пути до файлов с ключами нужно положить в env переменные:
 ```
-export PRIVATE_KEY_PATH=./signature.pem
-export PUBLIC_KEY_PATH=./signature.pub
+export PRIVATE_KEY_FILE=./signature.pem
+export PUBLIC_KEY_FILE=./signature.pub
 ```
 
 Запуск сервиса в контейнере с базой данных:
 ```bash
 docker-compose up --build
 ```
+
