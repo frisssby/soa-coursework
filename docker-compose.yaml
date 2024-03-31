@@ -5,7 +5,7 @@ services:
     image: mongo
     ports:
       - 27018:27017
-    restart: always
+    restart: unless-stopped
     volumes:
       - users-data:/data/db
 
@@ -14,6 +14,7 @@ services:
       context: users
     environment:
       MONGODB_URI: mongodb://users-db:27017
+      TASKS_URI: tasks-service:51075
     volumes:
       - ${PRIVATE_KEY_FILE}:/tmp/signature.pem
       - ${PUBLIC_KEY_FILE}:/tmp/signature.pub
@@ -22,6 +23,27 @@ services:
       - 8090:8090
     depends_on:
       - users-db
+      - tasks-service
+
+  tasks-db:
+    image: mongo
+    restart: unless-stopped
+    ports:
+      - 27019:27017
+    volumes:
+      - tasks-data:/data/db
+
+  tasks-service:
+    build:
+      context: tasks
+    environment:
+      MONGODB_URI: mongodb://tasks-db:27017
+    command: ["--port", "51075"]
+    ports:
+      - 51075:51075
+    depends_on:
+      - tasks-db
 
 volumes:
   users-data:
+  tasks-data:

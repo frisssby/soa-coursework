@@ -1,15 +1,17 @@
-package main
+package handlers
 
 import (
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 	"time"
+
 	"users/db"
 	"users/jwt"
 	"users/models"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const tokenTTl = 60 * time.Minute
@@ -24,7 +26,7 @@ func checkPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func signUp(c *gin.Context) {
+func SignUp(c *gin.Context) {
 	var userCreds models.UserCredentials
 	if err := c.BindJSON(&userCreds); err != nil {
 		return
@@ -67,9 +69,10 @@ func signUp(c *gin.Context) {
 	c.JSON(http.StatusOK, "Successfully signed up")
 }
 
-func signIn(c *gin.Context) {
+func SignIn(c *gin.Context) {
 	var userCreds models.UserCredentials
 	if err := c.BindJSON(&userCreds); err != nil {
+		c.JSON(http.StatusBadRequest, "Bad request")
 		return
 	}
 
@@ -98,35 +101,4 @@ func signIn(c *gin.Context) {
 	}
 	c.SetCookie("jwt", tokenString, expirationTime.Second(), "/", "localhost", false, true)
 	c.JSON(http.StatusOK, "Successfully signed in")
-}
-
-func updateUser(c *gin.Context) {
-	tokenString, err := c.Cookie("jwt")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, "No token provided")
-		return
-	}
-
-	username, err := jwt.ValidateJWT(tokenString)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, "Invalid token")
-		return
-	}
-
-	if username != c.Param("username") {
-		c.JSON(http.StatusForbidden, "Not allowed to update this resource")
-		return
-	}
-
-	var userData models.UserData
-	if err := c.BindJSON(&userData); err != nil {
-		return
-	}
-
-	if err := db.UpdateUserData(username, userData); err != nil {
-		log.Println("Error updating user data: ", err.Error())
-		c.JSON(http.StatusInternalServerError, "")
-		return
-	}
-	c.JSON(http.StatusOK, "Successfully updated user data")
 }

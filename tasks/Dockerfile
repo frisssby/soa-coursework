@@ -1,6 +1,6 @@
 FROM golang:1.22-alpine
 
-WORKDIR /users
+WORKDIR /tasks
 COPY go.* .
 
 RUN go mod download -x
@@ -9,6 +9,4 @@ COPY . .
 
 RUN go build .
 
-ENV GIN_MODE=release
-
-ENTRYPOINT ["./users"]
+ENTRYPOINT ["./tasks"]
