@@ -22,8 +22,9 @@ func CreateTask(c *gin.Context) {
 		return
 	}
 	response, err := grpc.TaskClient.CreateTask(context.Background(), &pb.CreateTaskRequest{
-		UserId:  username,
-		Content: task.Description,
+		UserId:      username,
+		Description: task.Description,
+		Status:      task.Status,
 	})
 	if err != nil {
 		processRPCError(c, err)
@@ -42,9 +43,10 @@ func UpdateTask(c *gin.Context) {
 	}
 	taskId := c.Param("id")
 	_, err := grpc.TaskClient.UpdateTask(context.Background(), &pb.UpdateTaskRequest{
-		UserId:  username,
-		TaskId:  taskId,
-		Content: task.Description,
+		UserId:      username,
+		TaskId:      taskId,
+		Description: task.Description,
+		Status:      task.Status,
 	})
 	if err != nil {
 		processRPCError(c, err)
@@ -81,7 +83,8 @@ func ListTasks(c *gin.Context) {
 	for _, task := range resp.Tasks {
 		tasks = append(tasks, models.Task{
 			TaskId:      task.TaskId,
-			Description: task.Content,
+			Description: task.Description,
+			Status:      task.Status,
 		})
 	}
 	c.JSON(http.StatusOK, tasks)
@@ -95,7 +98,7 @@ func GetTask(c *gin.Context) {
 		processRPCError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, models.Task{Description: resp.Content})
+	c.JSON(http.StatusOK, models.Task{Description: resp.Description, Status: resp.Status})
 }
 
 const DEFAULT_PAGE_SIZE = 10

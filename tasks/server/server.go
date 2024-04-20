@@ -22,7 +22,8 @@ type TaskServer struct {
 func (s *TaskServer) CreateTask(ctx context.Context, req *pb.CreateTaskRequest) (*pb.CreateTaskResponse, error) {
 	newTask, err := db.CreateTask(&models.Task{
 		UserId:      req.UserId,
-		Description: req.Content,
+		Description: req.Description,
+		Status:      req.Status,
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -36,7 +37,8 @@ func (s *TaskServer) CreateTask(ctx context.Context, req *pb.CreateTaskRequest) 
 func (s *TaskServer) UpdateTask(ctx context.Context, req *pb.UpdateTaskRequest) (*emptypb.Empty, error) {
 	task := models.Task{
 		UserId:      req.UserId,
-		Description: req.Content,
+		Description: req.Description,
+		Status:      req.Status,
 	}
 	stored, err := db.GetTask(req.TaskId)
 	if err == mongo.ErrNoDocuments {
@@ -83,11 +85,8 @@ func (s *TaskServer) GetTask(ctx context.Context, req *pb.GetTaskRequest) (*pb.G
 	if stored.UserId != req.UserId {
 		return nil, status.Error(codes.PermissionDenied, "not enough rights")
 	}
-	resp := pb.GetTaskResponse{
-		TaskId:  stored.TaskId,
-		Content: stored.Description,
-	}
-	return &resp, nil
+	resp := taskResponse(stored)
+	return resp, nil
 }
 
 func (s *TaskServer) ListTasks(ctx context.Context, req *pb.ListTasksRequest) (*pb.ListTasksResponse, error) {
@@ -97,7 +96,11 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *pb.ListTasksRequest) (*
 	}
 	var resp pb.ListTasksResponse
 	for _, task := range tasks {
-		resp.Tasks = append(resp.Tasks, &pb.GetTaskResponse{TaskId: task.TaskId, Content: task.Description})
+		resp.Tasks = append(resp.Tasks, taskResponse(&task))
 	}
 	return &resp, nil
+}
+
+func taskResponse(task *models.Task) *pb.GetTaskResponse {
+	return &pb.GetTaskResponse{TaskId: task.TaskId, Description: task.Description, Status: task.Status}
 }

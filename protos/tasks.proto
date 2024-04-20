@@ -15,39 +15,42 @@ service TaskService {
 }
 
 message CreateTaskRequest {
-  string description = 1;
-  string userId = 2; // The ID of the user creating the task
+  string user_id = 1; // ID of the user creating the task
+  string description = 2;
+  string status = 3;
 }
 
 message CreateTaskResponse {
-  string taskId = 1;
+  string task_id = 1;
 }
 
 message UpdateTaskRequest {
-  string taskId = 1;
-  string description = 2;
-  string userId = 3; // The ID of the user updating the task
+  string task_id = 1;
+  string user_id = 2; // ID of the user updating the task
+  string description = 3;
+  string status = 4;
 }
 
 message DeleteTaskRequest {
-  string taskId = 1;
-  string userId = 2; // The ID of the user deleting the task
+  string user_id = 1; // ID of the user deleting the task
+  string task_id = 2;
 }
 
 message GetTaskRequest {
-  string taskId = 1;
-  string userId = 2; // The ID of the user retrieving the task
+  string user_id = 1; // ID of the user retrieving the task
+  string task_id = 2;
 }
 
 message GetTaskResponse {
-  string taskId = 1;
-  string description = 3;
+  string task_id = 1;
+  string description = 2;
+  string status = 3;
 }
 
 message ListTasksRequest {
-  int32 pageId = 1;
-  int32 pageSize = 2;
-  string userId = 3; // The ID of the user requesting the task list
+  string user_id = 1; // ID of the user requesting the task list
+  int32 page_size = 2;
+  int32 page_id = 3;
 }
 
 message ListTasksResponse {

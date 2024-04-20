@@ -59,7 +59,11 @@ func UpdateTask(id string, task models.Task) error {
 
 func DeleteTask(id string) error {
 	taskCollection := database.Collection("tasks")
-	filter := bson.D{{Key: "_id", Value: id}}
+	var objectId primitive.ObjectID
+	if err := objectId.UnmarshalText([]byte(id)); err != nil {
+		return mongo.ErrNoDocuments
+	}
+	filter := bson.D{{Key: "_id", Value: objectId}}
 	_, err := taskCollection.DeleteOne(context.Background(), filter)
 	return err
 }
