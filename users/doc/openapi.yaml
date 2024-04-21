@@ -86,14 +86,26 @@ paths:
       summary: Create new task
       requestBody:
         content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Task"
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  status:
+                    type: string
       security:
         - cookieAuth: []
       responses:
         '200':
-          description: Successfully created new task
+          description: A JSON object containing task_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task_id:
+                    type: string
         '401':
           description: Access token is missing
         '403':
@@ -115,7 +127,12 @@ paths:
         - cookieAuth: []
       responses:
         '200':
-          description: Successfully retrieved task
+          description: List of user's tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskArray'
+                  
         '401':
           description: Access token is missing
         '403':
@@ -135,7 +152,11 @@ paths:
         - cookieAuth: []
       responses:
         '200':
-          description: bla
+          description: Task object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
         '401':
           description: Access token is missing
         '403':
@@ -152,11 +173,16 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Task"
       security:
         - cookieAuth: []
       responses:
         '200':
-          description: Successfully updated task
+          description: OK
         '401':
           description: Access token is missing
         '403':
@@ -177,7 +203,7 @@ paths:
         - cookieAuth: []
       responses:
         '200':
-          description: Successfully deleted task    
+          description: OK   
         '401':
           description: Access token is missing
         '403':
@@ -223,10 +249,22 @@ components:
         email: iivanov@gmail.com
     Task:
       type: object
-      required: [description]
+      required: [task_id, description, status]
       properties:
+        task_id:
+          type: string
         description:
           type: string
+        status:
+          type: string
+      example:
+        task_id: "abacaba"
+        description: "soa hw3"
+        satus: "in_progress"
+    TaskArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/Task'
   securitySchemes:
     cookieAuth:
       type: apiKey

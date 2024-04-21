@@ -72,7 +72,6 @@ func SignUp(c *gin.Context) {
 func SignIn(c *gin.Context) {
 	var userCreds models.UserCredentials
 	if err := c.BindJSON(&userCreds); err != nil {
-		c.JSON(http.StatusBadRequest, "Bad request")
 		return
 	}
 

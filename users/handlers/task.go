@@ -98,7 +98,7 @@ func GetTask(c *gin.Context) {
 		processRPCError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, models.Task{Description: resp.Description, Status: resp.Status})
+	c.JSON(http.StatusOK, models.Task{TaskId: resp.TaskId, Description: resp.Description, Status: resp.Status})
 }
 
 const DEFAULT_PAGE_SIZE = 10
