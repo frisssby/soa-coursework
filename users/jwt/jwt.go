@@ -2,10 +2,11 @@ package jwt
 
 import (
 	"crypto/rsa"
-	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"os"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 var jwtPublic *rsa.PublicKey

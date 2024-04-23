@@ -1,11 +1,17 @@
 openapi: 3.0.0
 info:
   title: Task Tracker API
-  description: Task Tracker service public API
+  description: Task Tracker service public API.
   version: 0.1.0
+tags:
+  - name: Authorization
+  - name: Users
+  - name: Tasks
 paths:
   /auth/signup:
     post:
+      tags:
+      - Authorization
       summary: Create a new user
       requestBody:
         description: New user's credentials
@@ -26,6 +32,9 @@ paths:
           description: User with speciefied username already exists
   /auth/signin:
     post:
+      tags:
+        - Authorization
+      summary: Authorize user
       requestBody:
         description: User's credentials
         required: true
@@ -35,7 +44,7 @@ paths:
               $ref: '#/components/schemas/UserCreds'
       responses:
         '200':
-          description: Successfully authentificated. The access token is returned in a cookie named jwt. You need to include this cookie in subsequent requests.
+          description: Successfully authentificated. The access token is returned in a cookie named `jwt`. You need to include this cookie in subsequent requests.
           headers:
             Set-Cookie:
               schema:
@@ -45,6 +54,8 @@ paths:
           description: Invalid username or password
   /user/{username}:
     put:
+      tags:
+        - Users
       summary: Update user data
       requestBody:
         content:
@@ -68,6 +79,138 @@ paths:
           description: Access token is missing
         '403':
           description: Access token is invalid
+  /task:
+    post: 
+      tags:
+        - Tasks
+      summary: Create new task
+      requestBody:
+        content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  status:
+                    type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: A JSON object containing task_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task_id:
+                    type: string
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+    get:
+      tags:
+        - Tasks
+      summary: List your tasks by pages
+      parameters:
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+        - name: page_num
+          in: query
+          schema:
+            type: integer
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of user's tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskArray'
+                  
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+  /task/{id}:
+    get:
+      tags:
+        - Tasks
+      summary: Get task by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Task object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+        '404':
+          description: Task does not exist
+    put:
+      tags:
+        - Tasks
+      summary: Update task 
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Task"
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+        '404':
+          description: Task does not exist
+    delete:
+      tags:
+        - Tasks
+      summary: Delete task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK   
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+        '404':
+          description: Task does not exist
+
 components:
   schemas:
     UserCreds:
@@ -104,6 +247,24 @@ components:
         dateBirth: 2020-05-11T20:14:14.796Z
         phone: "+791611122233"
         email: iivanov@gmail.com
+    Task:
+      type: object
+      required: [task_id, description, status]
+      properties:
+        task_id:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+      example:
+        task_id: "abacaba"
+        description: "soa hw3"
+        satus: "in_progress"
+    TaskArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/Task'
   securitySchemes:
     cookieAuth:
       type: apiKey

@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package taskspb;
+
+option go_package = "proto/;taskspb";
+
+import "google/protobuf/empty.proto";
+
+service TaskService {
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+  rpc UpdateTask(UpdateTaskRequest) returns (google.protobuf.Empty);
+  rpc DeleteTask(DeleteTaskRequest) returns (google.protobuf.Empty);
+  rpc GetTask(GetTaskRequest) returns (GetTaskResponse);
+  rpc ListTasks(ListTasksRequest) returns (ListTasksResponse);
+}
+
+message CreateTaskRequest {
+  string user_id = 1; // ID of the user creating the task
+  string description = 2;
+  string status = 3;
+}
+
+message CreateTaskResponse {
+  string task_id = 1;
+}
+
+message UpdateTaskRequest {
+  string task_id = 1;
+  string user_id = 2; // ID of the user updating the task
+  string description = 3;
+  string status = 4;
+}
+
+message DeleteTaskRequest {
+  string user_id = 1; // ID of the user deleting the task
+  string task_id = 2;
+}
+
+message GetTaskRequest {
+  string user_id = 1; // ID of the user retrieving the task
+  string task_id = 2;
+}
+
+message GetTaskResponse {
+  string task_id = 1;
+  string description = 2;
+  string status = 3;
+}
+
+message ListTasksRequest {
+  string user_id = 1; // ID of the user requesting the task list
+  int32 page_size = 2;
+  int32 page_id = 3;
+}
+
+message ListTasksResponse {
+  repeated GetTaskResponse tasks = 1;
+}
