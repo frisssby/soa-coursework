@@ -51,7 +51,6 @@ services:
     restart: unless-stopped
     ports:
       - 8124:8123
-      - 9000:9000
     volumes:
       - stats-data:/data/db
 
