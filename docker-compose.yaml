@@ -46,6 +46,28 @@ services:
     depends_on:
       - tasks-db
 
+  stats-db:
+    image: yandex/clickhouse-server:latest
+    restart: unless-stopped
+    ports:
+      - 8124:8123
+      - 9000:9000
+    volumes:
+      - stats-data:/data/db
+
+  stats-service:
+    build:
+      context: .
+      dockerfile: stats/Dockerfile
+    environment:
+      CLICKHOUSE_URI: http://stats-db:8123
+    command: ["--port", "51075"]
+    ports:
+      - 51076:51075
+    depends_on:
+      - stats-db
+
 volumes:
   users-data:
   tasks-data:
+  stats-data:
