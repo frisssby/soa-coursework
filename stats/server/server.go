@@ -4,9 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 
-	"stats/db"
 	pb "stats/proto"
 
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -17,11 +15,7 @@ type StatsServer struct {
 	db *sql.DB
 }
 
-func NewStatsServer() (*StatsServer, error) {
-	db, err := db.NewDatabase(os.Getenv("CLICKHOUSE_URI"))
-	if err != nil {
-		return nil, err
-	}
+func NewStatsServer(db *sql.DB) (*StatsServer, error) {
 	return &StatsServer{db: db}, nil
 }
 

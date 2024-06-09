@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"users/db"
+	"users/event"
 	"users/grpc"
 	"users/handlers"
 	"users/jwt"
@@ -17,10 +18,13 @@ import (
 
 func main() {
 	if err := db.ConnectToMongoDB(os.Getenv("MONGODB_URI")); err != nil {
-		log.Fatal("Could not connect to MongoDB", err.Error())
+		log.Fatalf("Failed to connect to MongoDB: %v", err.Error())
 	}
 	if err := grpc.InitTasksClient(os.Getenv("TASKS_URI")); err != nil {
-		log.Fatal("Could not init tasks service grpc client", err.Error())
+		log.Fatalf("Failed to init tasks service grpc client: %v", err.Error())
+	}
+	if err := event.InitEventProducer(os.Getenv("KAFKA_URI")); err != nil {
+		log.Fatalf("Failed to create kafka producer: %v", err.Error())
 	}
 
 	privateFileFlag := flag.String("private", "", "path to JWT private key `file`")
@@ -40,13 +44,15 @@ func main() {
 
 	taskGroup := router.Group("/task").Use(middleware.JWTAuthMiddleware)
 	taskGroup.POST("", handlers.CreateTask)
-	taskGroup.GET("", handlers.ListTasks)
 	taskGroup.GET("/:id", handlers.GetTask)
 	taskGroup.PUT("/:id", handlers.UpdateTask)
 	taskGroup.DELETE("/:id", handlers.DeleteTask)
+	taskGroup.POST("/:id/like", handlers.LikeTask)
+	taskGroup.POST("/:id/view", handlers.ViewTask)
 
-	userGroup := router.Group("/task").Use(middleware.JWTAuthMiddleware)
-	userGroup.PUT("user/:username", handlers.UpdateUser)
+	userGroup := router.Group("/user").Use(middleware.JWTAuthMiddleware)
+	userGroup.PUT("/:username", handlers.UpdateUser)
+	userGroup.GET("/:id/tasks", handlers.ListTasks)
 
 	log.Printf("Starting server on port %d", *portFlag)
 	if err := router.Run(fmt.Sprintf(":%d", *portFlag)); err != nil {

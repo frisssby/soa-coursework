@@ -16,6 +16,7 @@ services:
     environment:
       MONGODB_URI: mongodb://users-db:27017
       TASKS_URI: tasks-service:51075
+      KAFKA_URI: kafka:29092
     volumes:
       - ${PRIVATE_KEY_FILE}:/tmp/signature.pem
       - ${PUBLIC_KEY_FILE}:/tmp/signature.pub
@@ -23,8 +24,14 @@ services:
     ports:
       - 8090:8090
     depends_on:
-      - users-db
-      - tasks-service
+      users-db:
+        condition: service_started
+      tasks-service:
+        condition: service_started
+      stats-service:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
   tasks-db:
     image: mongo
@@ -42,7 +49,7 @@ services:
       MONGODB_URI: mongodb://tasks-db:27017
     command: ["--port", "51075"]
     ports:
-      - 51075:51075
+      - 51076:51075
     depends_on:
       - tasks-db
 
@@ -53,6 +60,8 @@ services:
       - 8124:8123
     volumes:
       - stats-data:/data/db
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8123/ping || exit 1
 
   stats-service:
     build:
@@ -60,13 +69,42 @@ services:
       dockerfile: stats/Dockerfile
     environment:
       CLICKHOUSE_URI: http://stats-db:8123
-    command: ["--port", "51075"]
+      KAFKA_URI: kafka:29092
+    command: ["--grpc-port", "51075", "--http-port", "8080"]
     ports:
-      - 51076:51075
+      - 51077:51075
+      - 8080:8080
     depends_on:
-      - stats-db
+      stats-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f localhost:8080/health_check || exit 1
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+    ports:
+      - 2181:2181
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    environment:
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:29092
+      - KAFKA_BROKER_ID=1
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+    ports:
+      - 29092:29092
+    depends_on:
+      - zookeeper
+    healthcheck:
+      test: nc -z localhost 29092 || exit 1
 
 volumes:
   users-data:
   tasks-data:
   stats-data:
+ 

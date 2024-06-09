@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package taskspb;
 
-option go_package = "proto/;taskspb";
+option go_package = "proto/tasks;taskspb";
 
 import "google/protobuf/empty.proto";
 
@@ -37,7 +37,7 @@ message DeleteTaskRequest {
 }
 
 message GetTaskRequest {
-  string user_id = 1; // ID of the user retrieving the task
+  reserved 1;
   string task_id = 2;
 }
 
@@ -45,10 +45,11 @@ message GetTaskResponse {
   string task_id = 1;
   string description = 2;
   string status = 3;
+  string author_id = 4;
 }
 
 message ListTasksRequest {
-  string user_id = 1; // ID of the user requesting the task list
+  string author_id = 1;
   int32 page_size = 2;
   int32 page_id = 3;
 }

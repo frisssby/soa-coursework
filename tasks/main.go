@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"tasks/db"
-	pb "tasks/proto"
+	pb "tasks/proto/tasks"
 	"tasks/server"
 
 	"google.golang.org/grpc"

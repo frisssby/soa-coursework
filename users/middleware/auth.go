@@ -19,5 +19,4 @@ func JWTAuthMiddleware(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, "Invalid token")
 	}
 	c.Set("username", username)
-
 }

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package statspb;
+
+option go_package = "proto/stats;statspb";
+
+import "google/protobuf/empty.proto";
+
+service StatisticsService {
+    rpc GetTaskStats(GetTaskStatsRequest) returns (GetTaskStatsResponse);
+    rpc GetTasksTop(GetTasksTopRequest) returns (GetTasksTopResponse);
+    rpc GetUsersTop(google.protobuf.Empty) returns (GetUsersTopResponse);
+}
+
+message GetTaskStatsRequest {
+    string task_id = 1;
+}
+
+message GetTaskStatsResponse {
+    string task_id = 1;
+    uint64 likes = 2;
+    uint64 views = 3;
+}
+
+enum StatsType {
+    Likes = 0;
+    Views = 1;
+}
+
+message GetTasksTopRequest {
+    StatsType order_by = 1;
+}
+
+message Task {
+    string task_id = 1;
+    string author_id = 2;
+    uint64 count = 3; // views or likes
+}
+
+message GetTasksTopResponse {
+    repeated Task tasks = 1;
+}
+
+message User {
+    string user_id = 1;
+    uint64 likes_count = 2;
+}
+
+message GetUsersTopResponse {
+    repeated User users = 1;
+}
