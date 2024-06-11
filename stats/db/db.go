@@ -27,9 +27,9 @@ func createTables(db *sql.DB) error {
 		`CREATE TABLE IF NOT EXISTS views (
 			user_id String,
 			task_id String,
-			author_id String,
-			PRIMARY KEY (user_id, task_id)
-		) engine=ReplacingMergeTree`,
+			author_id String
+		) engine=ReplacingMergeTree
+		 ORDER BY (user_id, task_id)`,
 	); err != nil {
 		return err
 	}
@@ -37,9 +37,9 @@ func createTables(db *sql.DB) error {
 		`CREATE TABLE IF NOT EXISTS likes (
 			user_id String,
 			task_id String,
-			author_id String,
-			PRIMARY KEY (user_id, task_id)
-		) engine=ReplacingMergeTree`,
+			author_id String
+		) engine=ReplacingMergeTree
+		 ORDER BY (user_id, task_id)`,
 	); err != nil {
 		return err
 	}

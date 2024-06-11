@@ -114,6 +114,21 @@ paths:
           description: Access token is missing
         '403':
           description: Access token is invalid
+  /user/top:
+    get:
+      tags:
+        - Users
+      summary: List users with most liked posts
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Top users
+                  
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
   /task:
     post: 
       tags:

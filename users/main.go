@@ -23,6 +23,9 @@ func main() {
 	if err := grpc.InitTasksClient(os.Getenv("TASKS_URI")); err != nil {
 		log.Fatalf("Failed to init tasks service grpc client: %v", err.Error())
 	}
+	if err := grpc.InitStatsClient(os.Getenv("STATS_URI")); err != nil {
+		log.Fatalf("Failed to init stats service grpc client: %v", err.Error())
+	}
 	if err := event.InitEventProducer(os.Getenv("KAFKA_URI")); err != nil {
 		log.Fatalf("Failed to create kafka producer: %v", err.Error())
 	}
