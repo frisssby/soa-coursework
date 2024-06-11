@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func processRPCError(c *gin.Context, err error) {
+func processTaskRPCError(c *gin.Context, err error) {
 	if status.Code(err) == codes.NotFound {
 		c.JSON(http.StatusNotFound, "Task not found")
 		return

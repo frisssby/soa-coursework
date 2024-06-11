@@ -49,10 +49,13 @@ func main() {
 	taskGroup.DELETE("/:id", handlers.DeleteTask)
 	taskGroup.POST("/:id/like", handlers.LikeTask)
 	taskGroup.POST("/:id/view", handlers.ViewTask)
+	taskGroup.GET("/:id/stats", handlers.GetTaskStats)
+	taskGroup.GET("/top", handlers.GetTopTasks)
 
 	userGroup := router.Group("/user").Use(middleware.JWTAuthMiddleware)
 	userGroup.PUT("/:username", handlers.UpdateUser)
 	userGroup.GET("/:id/tasks", handlers.ListTasks)
+	userGroup.GET("/top", handlers.GetTopUsers)
 
 	log.Printf("Starting server on port %d", *portFlag)
 	if err := router.Run(fmt.Sprintf(":%d", *portFlag)); err != nil {
