@@ -7,7 +7,7 @@ import (
 	"tasks/db"
 	"tasks/models"
 
-	pb "tasks/proto"
+	pb "tasks/proto/tasks"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc/codes"
@@ -82,15 +82,12 @@ func (s *TaskServer) GetTask(ctx context.Context, req *pb.GetTaskRequest) (*pb.G
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	if stored.UserId != req.UserId {
-		return nil, status.Error(codes.PermissionDenied, "not enough rights")
-	}
 	resp := taskResponse(stored)
 	return resp, nil
 }
 
 func (s *TaskServer) ListTasks(ctx context.Context, req *pb.ListTasksRequest) (*pb.ListTasksResponse, error) {
-	tasks, err := db.ListsTasks(req.UserId, int(req.PageSize), int(req.PageId))
+	tasks, err := db.ListsTasks(req.AuthorId, int(req.PageSize), int(req.PageId))
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -102,5 +99,10 @@ func (s *TaskServer) ListTasks(ctx context.Context, req *pb.ListTasksRequest) (*
 }
 
 func taskResponse(task *models.Task) *pb.GetTaskResponse {
-	return &pb.GetTaskResponse{TaskId: task.TaskId, Description: task.Description, Status: task.Status}
+	return &pb.GetTaskResponse{
+		AuthorId:    task.UserId,
+		TaskId:      task.TaskId,
+		Description: task.Description,
+		Status:      task.Status,
+	}
 }

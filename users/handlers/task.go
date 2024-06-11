@@ -2,17 +2,16 @@ package handlers
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"strconv"
 
+	"users/event"
 	"users/grpc"
 	"users/models"
-	pb "users/proto"
+	statspb "users/proto/stats"
+	taskpb "users/proto/tasks"
 
 	"github.com/gin-gonic/gin"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func CreateTask(c *gin.Context) {
@@ -21,17 +20,17 @@ func CreateTask(c *gin.Context) {
 	if err := c.BindJSON(&task); err != nil {
 		return
 	}
-	response, err := grpc.TaskClient.CreateTask(context.Background(), &pb.CreateTaskRequest{
+	response, err := grpc.TaskClient.CreateTask(context.Background(), &taskpb.CreateTaskRequest{
 		UserId:      username,
 		Description: task.Description,
 		Status:      task.Status,
 	})
 	if err != nil {
-		processRPCError(c, err)
+		processTaskRPCError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, models.Task{
-		TaskId: response.TaskId,
+		TaskID: response.TaskId,
 	})
 }
 
@@ -41,15 +40,15 @@ func UpdateTask(c *gin.Context) {
 	if err := c.BindJSON(&task); err != nil {
 		return
 	}
-	taskId := c.Param("id")
-	_, err := grpc.TaskClient.UpdateTask(context.Background(), &pb.UpdateTaskRequest{
+	taskID := c.Param("id")
+	_, err := grpc.TaskClient.UpdateTask(context.Background(), &taskpb.UpdateTaskRequest{
 		UserId:      username,
-		TaskId:      taskId,
+		TaskId:      taskID,
 		Description: task.Description,
 		Status:      task.Status,
 	})
 	if err != nil {
-		processRPCError(c, err)
+		processTaskRPCError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, "Successfully updated task")
@@ -57,48 +56,118 @@ func UpdateTask(c *gin.Context) {
 
 func DeleteTask(c *gin.Context) {
 	username := c.GetString("username")
-	taskId := c.Param("id")
-	_, err := grpc.TaskClient.DeleteTask(context.Background(), &pb.DeleteTaskRequest{UserId: username, TaskId: taskId})
+	taskID := c.Param("id")
+	_, err := grpc.TaskClient.DeleteTask(context.Background(), &taskpb.DeleteTaskRequest{UserId: username, TaskId: taskID})
 	if err != nil {
-		processRPCError(c, err)
+		processTaskRPCError(c, err)
 		return
 	}
 	c.JSON(http.StatusOK, "Successfully deleted task")
 }
 
-func ListTasks(c *gin.Context) {
-	username := c.GetString("username")
-	log.Println("page_size", getPageSize(c), "id", getPageID(c))
-	resp, err := grpc.TaskClient.ListTasks(context.Background(), &pb.ListTasksRequest{
-		UserId:   username,
-		PageId:   int32(getPageID(c)),
-		PageSize: int32(getPageSize(c)),
-	})
-
+func GetTask(c *gin.Context) {
+	taskID := c.Param("id")
+	resp, err := grpc.TaskClient.GetTask(context.Background(), &taskpb.GetTaskRequest{TaskId: taskID})
 	if err != nil {
-		processRPCError(c, err)
+		processTaskRPCError(c, err)
 		return
 	}
-	tasks := make([]models.Task, 0)
-	for _, task := range resp.Tasks {
-		tasks = append(tasks, models.Task{
-			TaskId:      task.TaskId,
-			Description: task.Description,
-			Status:      task.Status,
-		})
-	}
-	c.JSON(http.StatusOK, tasks)
+	c.JSON(http.StatusOK, models.Task{
+		UserID:      resp.AuthorId,
+		TaskID:      resp.TaskId,
+		Description: resp.Description,
+		Status:      resp.Status,
+	})
 }
 
-func GetTask(c *gin.Context) {
-	username := c.GetString("username")
-	taskId := c.Param("id")
-	resp, err := grpc.TaskClient.GetTask(context.Background(), &pb.GetTaskRequest{UserId: username, TaskId: taskId})
+func GetTaskStats(c *gin.Context) {
+	taskID := c.Param("id")
+	response, err := grpc.StatsClient.GetTaskStats(context.Background(), &statspb.GetTaskStatsRequest{
+		TaskId: taskID,
+	})
 	if err != nil {
-		processRPCError(c, err)
+		c.JSON(http.StatusInternalServerError, "RPC failed")
 		return
 	}
-	c.JSON(http.StatusOK, models.Task{TaskId: resp.TaskId, Description: resp.Description, Status: resp.Status})
+	c.JSON(http.StatusOK, models.TaskStat{
+		TaskID: taskID,
+		Likes:  response.Likes,
+		Views:  response.Views,
+	})
+}
+
+func GetTopTasks(c *gin.Context) {
+	orderBy, ok := c.GetQuery("order_by")
+	if !ok {
+		c.JSON(http.StatusBadRequest, "order_by query parameter required")
+		return
+	}
+	var statsType statspb.StatsType
+	switch orderBy {
+	case "likes":
+		statsType = statspb.StatsType_Likes
+	case "views":
+		statsType = statspb.StatsType_Views
+	default:
+		c.JSON(http.StatusBadRequest, "order_by query parameter should be either `likes` or `views`")
+		return
+	}
+	response, err := grpc.StatsClient.GetTasksTop(context.Background(), &statspb.GetTasksTopRequest{
+		OrderBy: statsType,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, "RPC failed")
+		return
+	}
+	taskStats := make([]interface{}, 0)
+	for _, stat := range response.GetTasks() {
+		if orderBy == "likes" {
+			taskStats = append(taskStats, models.LikesStat{
+				TaskID: stat.TaskId,
+				Likes:  stat.Count,
+			})
+		} else {
+			taskStats = append(taskStats, models.TaskStat{
+				TaskID: stat.TaskId,
+				Views:  stat.Count,
+			})
+		}
+	}
+	c.JSON(http.StatusOK, taskStats)
+
+}
+
+func LikeTask(c *gin.Context) {
+	handleActivity(c, "likes")
+}
+
+func ViewTask(c *gin.Context) {
+	handleActivity(c, "views")
+}
+
+func handleActivity(c *gin.Context, brokerTopic string) {
+	username := c.GetString("username")
+	taskID := c.Param("id")
+	authorID, err := getTaskAuthor(taskID)
+	if err != nil {
+		processTaskRPCError(c, err)
+		return
+	}
+	if err := event.ProduceEvent(brokerTopic, models.Event{
+		UserID:   username,
+		TaskID:   taskID,
+		AuthorID: authorID,
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, "Failed to write message to broker")
+	}
+}
+
+func getTaskAuthor(taskID string) (string, error) {
+	resp, err := grpc.TaskClient.GetTask(context.Background(), &taskpb.GetTaskRequest{TaskId: taskID})
+	if err != nil {
+		return "", err
+	}
+	return resp.AuthorId, nil
 }
 
 const DEFAULT_PAGE_SIZE = 10
@@ -121,17 +190,4 @@ func getPageID(c *gin.Context) int {
 		}
 	}
 	return 0
-}
-
-func processRPCError(c *gin.Context, err error) {
-	if status.Code(err) == codes.NotFound {
-		c.JSON(http.StatusNotFound, "Task not found")
-		return
-	}
-	if status.Code(err) == codes.PermissionDenied {
-		c.JSON(http.StatusForbidden, "Not enough rights")
-		return
-	}
-	log.Println("RPC failed", err.Error())
-	c.JSON(http.StatusInternalServerError, "RPC failed")
 }

@@ -1,19 +1,19 @@
 package grpc
 
 import (
-	pb "users/proto/tasks"
+	pb "users/proto/stats"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-var TaskClient pb.TaskServiceClient
+var StatsClient pb.StatisticsServiceClient
 
-func InitTasksClient(uri string) error {
+func InitStatsClient(uri string) error {
 	conn, err := grpc.NewClient(uri, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
-	TaskClient = pb.NewTaskServiceClient(conn)
+	StatsClient = pb.NewStatisticsServiceClient(conn)
 	return nil
 }

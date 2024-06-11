@@ -1,4 +1,6 @@
 openapi: 3.0.0
+servers:
+  - url: http://127.0.0.1:8090
 info:
   title: Task Tracker API
   description: Task Tracker service public API.
@@ -79,6 +81,54 @@ paths:
           description: Access token is missing
         '403':
           description: Access token is invalid
+  /user/{id}/tasks:
+    get:
+      tags:
+        - Users
+      summary: List user's tasks by pages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+        - name: page_num
+          in: query
+          schema:
+            type: integer
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: List of user's tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskArray'
+                  
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+  /user/top:
+    get:
+      tags:
+        - Users
+      summary: List users with most liked posts
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Top users
+                  
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
   /task:
     post: 
       tags:
@@ -110,38 +160,11 @@ paths:
           description: Access token is missing
         '403':
           description: Access token is invalid
-    get:
-      tags:
-        - Tasks
-      summary: List your tasks by pages
-      parameters:
-        - name: page_size
-          in: query
-          schema:
-            type: integer
-        - name: page_num
-          in: query
-          schema:
-            type: integer
-      security:
-        - cookieAuth: []
-      responses:
-        '200':
-          description: List of user's tasks
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaskArray'
-                  
-        '401':
-          description: Access token is missing
-        '403':
-          description: Access token is invalid
   /task/{id}:
     get:
       tags:
         - Tasks
-      summary: Get task by id
+      summary: Get a task by id
       parameters:
         - name: id
           in: path
@@ -166,7 +189,7 @@ paths:
     put:
       tags:
         - Tasks
-      summary: Update task 
+      summary: Update a task 
       parameters:
         - name: id
           in: path
@@ -210,7 +233,90 @@ paths:
           description: Access token is invalid
         '404':
           description: Task does not exist
-
+  /task/{id}/stats:
+    get:
+      tags:
+        - Tasks
+      summary: Get task's stats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK   
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+        '404':
+          description: Task does not exist
+      security:
+        - cookieAuth: []
+  /task/{id}/view:     
+    post:
+      tags:
+        - Tasks
+      summary: View a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK   
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+        '404':
+          description: Task does not exist
+  /task/{id}/like:     
+    post:
+      tags:
+        - Tasks
+      summary: Like a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: OK   
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+        '404':
+          description: Task does not exist
+  /task/top:
+    get:
+      tags:
+        - Tasks
+      summary: List top tasks
+      parameters:
+        - name: order_by
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK   
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
 components:
   schemas:
     UserCreds:
