@@ -16,7 +16,7 @@ services:
     environment:
       MONGODB_URI: mongodb://users-db:27017
       TASKS_URI: tasks-service:51075
-      STATS_URI: stats-service:8080
+      STATS_URI: stats-service:51075
       KAFKA_URI: kafka:29092
     volumes:
       - ${PRIVATE_KEY_FILE}:/tmp/signature.pem

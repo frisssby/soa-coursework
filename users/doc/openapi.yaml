@@ -233,6 +233,28 @@ paths:
           description: Access token is invalid
         '404':
           description: Task does not exist
+  /task/{id}/stats:
+    get:
+      tags:
+        - Tasks
+      summary: Get task's stats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK   
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
+        '404':
+          description: Task does not exist
+      security:
+        - cookieAuth: []
   /task/{id}/view:     
     post:
       tags:
@@ -277,7 +299,24 @@ paths:
           description: Access token is invalid
         '404':
           description: Task does not exist
-
+  /task/top:
+    get:
+      tags:
+        - Tasks
+      summary: List top tasks
+      parameters:
+        - name: order_by
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK   
+        '401':
+          description: Access token is missing
+        '403':
+          description: Access token is invalid
 components:
   schemas:
     UserCreds:
